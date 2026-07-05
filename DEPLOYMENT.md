@@ -1,78 +1,42 @@
-# Cloudflare Deployment
+# Cloudflare Pages Deployment
 
-This app is configured for Cloudflare Workers using the OpenNext adapter.
+This MVP is configured as a static Next.js export for Cloudflare Pages.
 
-## Local Checks
+The app does not need a Worker because it has no backend, no auth, no database, and stores MVP data in the browser with `localStorage`.
 
-```bash
-npm run build
-npm run preview
-```
+## Cloudflare Settings
 
-Use `npm run preview` when you want a Cloudflare-like runtime locally. It builds the app with OpenNext and serves it through Wrangler.
+Create a **Pages** project, not a Worker project.
 
-## Deploy From Local Machine
-
-```bash
-npx wrangler login
-npm run deploy
-```
-
-The deployed Worker name is configured in `wrangler.jsonc` as `daily-missions`.
-
-## Deploy From Cloudflare/Git
-
-Create a Workers project connected to this repository and use one of these setups.
-
-Recommended:
-
-- Project name: `daily-missions`
-- Build command: leave blank
-- Deploy command: `npm run deploy`
+- Framework preset: `Next.js` or `None`
+- Build command: `npm run build`
+- Build output directory: `out`
 - Root directory: `/`
 - Node.js version: latest available LTS
 
-Local machine:
+Leave the deploy command blank if Cloudflare shows one. Static Pages deployments only need the build command and output directory.
+
+## Local Check
 
 ```bash
-npx wrangler login
-npm run deploy
+npm run build
 ```
 
-Do not use `npm run build` as the only build command for Cloudflare. It creates the regular Next.js `.next` output, but Cloudflare deployment needs the OpenNext `.open-next` Worker bundle.
+This writes the static site to `out/`.
 
-Do not use `npx wrangler deploy` as the Cloudflare dashboard deploy command for this project. Wrangler detects OpenNext and calls the OpenNext deploy step, but it can fail if the OpenNext build step did not run first in the same command.
+## If Cloudflare Still Mentions OpenNext
 
-No environment variables are required for the MVP. Data is stored in the browser with `localStorage`.
+Cloudflare is using an old project type or stale settings.
+
+Fix it by doing one of these:
+
+- Create a fresh **Cloudflare Pages** project for this repo.
+- Make sure the project is not a Worker.
+- Clear build cache and redeploy.
+- Confirm `wrangler.jsonc` and `open-next.config.ts` are not present in the pushed branch.
 
 ## Custom Domain
 
-After the first deployment, attach your domain in Cloudflare:
+After the first successful Pages deployment:
 
-Workers & Pages -> daily-missions -> Settings -> Domains & Routes.
-
-## Troubleshooting
-
-### `npm error Missing script: "deploy"`
-
-Cloudflare is building a copy of the repo where `package.json` does not contain the `deploy` script.
-
-Check these:
-
-- Push the latest `package.json`, `package-lock.json`, `wrangler.jsonc`, and `open-next.config.ts` to the branch connected in Cloudflare.
-- Confirm Cloudflare is connected to the same branch you pushed.
-- If this is inside a monorepo or subfolder, set the Cloudflare root directory to the folder that contains this `package.json`.
-- Retry the deployment after pushing. If it still uses the old script list, clear build cache and deploy again.
-
-The audit warnings in the build log are not what caused this failure; the missing `deploy` script did.
-
-### `Could not find compiled Open Next config, did you run the build command?`
-
-Cloudflare ran the deploy step before the OpenNext build artifact existed.
-
-Use these dashboard settings:
-
-- Build command: leave blank
-- Deploy command: `npm run deploy`
-
-Do not set the build command to `npm run build`, and do not set the deploy command to `npx wrangler deploy` for this OpenNext setup.
+Workers & Pages -> your Pages project -> Custom domains.
