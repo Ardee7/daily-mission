@@ -49,3 +49,18 @@ No environment variables are required for the MVP. Data is stored in the browser
 After the first deployment, attach your domain in Cloudflare:
 
 Workers & Pages -> daily-missions -> Settings -> Domains & Routes.
+
+## Troubleshooting
+
+### `npm error Missing script: "deploy"`
+
+Cloudflare is building a copy of the repo where `package.json` does not contain the `deploy` script.
+
+Check these:
+
+- Push the latest `package.json`, `package-lock.json`, `wrangler.jsonc`, and `open-next.config.ts` to the branch connected in Cloudflare.
+- Confirm Cloudflare is connected to the same branch you pushed.
+- If this is inside a monorepo or subfolder, set the Cloudflare root directory to the folder that contains this `package.json`.
+- Retry the deployment after pushing. If it still uses the old script list, clear build cache and deploy again.
+
+The audit warnings in the build log are not what caused this failure; the missing `deploy` script did.
