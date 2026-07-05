@@ -27,8 +27,8 @@ Create a Workers project connected to this repository and use one of these setup
 Recommended:
 
 - Project name: `daily-missions`
-- Build command: `npm run cf:build`
-- Deploy command: `npm run cf:deploy`
+- Build command: leave blank
+- Deploy command: `npm run deploy`
 - Root directory: `/`
 - Node.js version: latest available LTS
 
@@ -41,7 +41,7 @@ npm run deploy
 
 Do not use `npm run build` as the only build command for Cloudflare. It creates the regular Next.js `.next` output, but Cloudflare deployment needs the OpenNext `.open-next` Worker bundle.
 
-Do not use `npx wrangler deploy` as the Cloudflare dashboard deploy command for this project. Wrangler detects OpenNext and calls the OpenNext deploy step, but it can fail if the OpenNext build step did not run first in the same build workspace.
+Do not use `npx wrangler deploy` as the Cloudflare dashboard deploy command for this project. Wrangler detects OpenNext and calls the OpenNext deploy step, but it can fail if the OpenNext build step did not run first in the same command.
 
 No environment variables are required for the MVP. Data is stored in the browser with `localStorage`.
 
@@ -72,7 +72,7 @@ Cloudflare ran the deploy step before the OpenNext build artifact existed.
 
 Use these dashboard settings:
 
-- Build command: `npm run cf:build`
-- Deploy command: `npm run cf:deploy`
+- Build command: leave blank
+- Deploy command: `npm run deploy`
 
 Do not set the build command to `npm run build`, and do not set the deploy command to `npx wrangler deploy` for this OpenNext setup.
