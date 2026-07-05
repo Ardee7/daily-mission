@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Rubik_Mono_One, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
@@ -15,22 +14,6 @@ const navItems = [
   { href: "/settings", label: "Settings" },
 ];
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-});
-
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-});
-
-const rubikMonoOne = Rubik_Mono_One({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-rubik-mono-one",
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} ${rubikMonoOne.variable}`}>
+      <body>
         <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
           <header className="mission-panel mb-6 flex flex-col gap-4 rounded-sm p-4 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/" className="min-w-0">
