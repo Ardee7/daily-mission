@@ -18,11 +18,16 @@ export function parseImportedMissions(
   date: string
 ): { missions: Mission[]; error?: string } {
   let parsed: unknown;
+  const normalized = normalizeMissionJson(raw);
 
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(normalized);
   } catch {
-    return { missions: [], error: "That JSON could not be parsed." };
+    return {
+      missions: [],
+      error:
+        "That JSON could not be parsed. Make sure the pasted text is complete and not cut off.",
+    };
   }
 
   if (!isImportEnvelope(parsed)) {
@@ -53,6 +58,18 @@ export function parseImportedMissions(
       createdAt: now,
     })),
   };
+}
+
+export function normalizeMissionJson(raw: string) {
+  return raw
+    .trim()
+    .replace(/^\uFEFF/, "")
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .replace(/[“”„‟]/g, '"')
+    .replace(/[‘’‚‛]/g, "'")
+    .replace(/\u00A0/g, " ")
+    .replace(/\u2026/g, "...");
 }
 
 function isImportEnvelope(value: unknown): value is { missions: ImportedMission[] } {
