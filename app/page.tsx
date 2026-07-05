@@ -23,7 +23,7 @@ import {
 } from "@/lib/types";
 
 export default function TodayDashboard() {
-  const date = todayKey();
+  const [date, setDate] = useState("");
   const [checkIn, setCheckIn] = useState<DailyCheckIn>({ date });
   const [missions, setMissions] = useState<Mission[]>([]);
   const [wins, setWins] = useState("");
@@ -31,8 +31,16 @@ export default function TodayDashboard() {
   const [notes, setNotes] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [preferredName, setPreferredName] = useState("");
+  const [greeting, setGreeting] = useState("day");
 
   useEffect(() => {
+    setDate(todayKey());
+    setGreeting(timeGreeting());
+  }, []);
+
+  useEffect(() => {
+    if (!date) return;
+
     setCheckIn(getCheckIn(date) ?? { date });
     setMissions(getMissions(date));
     const savedNotes = getReportNotes(date);
@@ -47,8 +55,8 @@ export default function TodayDashboard() {
     () => buildDailyReport(date, checkIn, missions, { wins, struggles, notes }),
     [checkIn, date, missions, notes, struggles, wins]
   );
-  const textReport = useMemo(() => reportToText(report), [report]);
-  const jsonReport = useMemo(() => JSON.stringify(report, null, 2), [report]);
+  const textReport = useMemo(() => (date ? reportToText(report) : ""), [date, report]);
+  const jsonReport = useMemo(() => (date ? JSON.stringify(report, null, 2) : ""), [date, report]);
   const groupedMissions = useMemo(() => groupMissions(missions), [missions]);
   const progress = summary.total === 0 ? 0 : Math.round((summary.done / summary.total) * 100);
 
@@ -86,8 +94,8 @@ export default function TodayDashboard() {
   return (
     <div className="pb-10">
       <PageHeader
-        eyebrow={formatDisplayDate(date)}
-        title={`Good ${timeGreeting()}${preferredName ? `, ${preferredName}` : ""}.`}
+        eyebrow={date ? formatDisplayDate(date) : "Today"}
+        title={`Good ${greeting}${preferredName ? `, ${preferredName}` : ""}.`}
       >
         <div className="flex gap-2">
           <Link href="/check-in">

@@ -35,7 +35,7 @@ const emptyForm: CheckInForm = {
 };
 
 export default function CheckInPage() {
-  const date = todayKey();
+  const [date, setDate] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [savedCheckIn, setSavedCheckIn] = useState<DailyCheckIn | null>(null);
   const [missionJson, setMissionJson] = useState("");
@@ -43,6 +43,12 @@ export default function CheckInPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setDate(todayKey());
+  }, []);
+
+  useEffect(() => {
+    if (!date) return;
+
     const existing = getCheckIn(date);
     if (!existing) return;
 
@@ -72,6 +78,8 @@ export default function CheckInPage() {
 
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!date) return;
+
     const checkIn = formToCheckIn(date, form);
     saveCheckIn(checkIn);
     setSavedCheckIn(checkIn);
@@ -85,6 +93,8 @@ export default function CheckInPage() {
   }
 
   function importMissions() {
+    if (!date) return;
+
     setError("");
     setMessage("");
 
