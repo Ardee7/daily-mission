@@ -52,6 +52,42 @@ export function getMissions(date: string) {
   return readRecord<Mission[]>(MISSIONS_KEY)[date] ?? [];
 }
 
+export function listMissionsByDate() {
+  return readRecord<Mission[]>(MISSIONS_KEY);
+}
+
+export function getPastUnresolvedMissions(currentDate: string) {
+  const allMissions = listMissionsByDate();
+
+  return Object.entries(allMissions)
+    .filter(([date]) => date < currentDate)
+    .flatMap(([, missions]) =>
+      missions.filter(
+        (mission) => mission.status === "Todo" || mission.status === "Blocked"
+      )
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export function updateStoredMissionStatus(
+  date: string,
+  missionId: string,
+  status: Mission["status"]
+) {
+  const missions = getMissions(date);
+  const updated = missions.map((mission) =>
+    mission.id === missionId
+      ? {
+          ...mission,
+          status,
+          completedAt: status === "Done" ? new Date().toISOString() : undefined,
+        }
+      : mission
+  );
+
+  saveMissions(date, updated);
+}
+
 export function saveMissions(date: string, missions: Mission[]) {
   const allMissions = readRecord<Mission[]>(MISSIONS_KEY);
   allMissions[date] = missions;

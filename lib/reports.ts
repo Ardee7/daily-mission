@@ -61,6 +61,7 @@ export function reportToText(report: DailyReport) {
     `${summary.criticalOpen} critical mission${summary.criticalOpen === 1 ? "" : "s"} still open`,
     "",
     formatMissionList("Done", grouped.Done),
+    formatMissionList("Todo", grouped.Todo),
     formatMissionList("Skipped", grouped.Skipped),
     formatMissionList("Blocked", grouped.Blocked),
     "",

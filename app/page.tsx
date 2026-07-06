@@ -8,10 +8,12 @@ import { buildDailyReport, missionSummary, reportToText } from "@/lib/reports";
 import {
   getCheckIn,
   getMissions,
+  getPastUnresolvedMissions,
   getReportNotes,
   getSettings,
   saveMissions,
   saveReportNotes,
+  updateStoredMissionStatus,
 } from "@/lib/storage";
 import {
   DailyCheckIn,
@@ -32,6 +34,7 @@ export default function TodayDashboard() {
   const [exportOpen, setExportOpen] = useState(false);
   const [preferredName, setPreferredName] = useState("");
   const [greeting, setGreeting] = useState("day");
+  const [pastUnresolved, setPastUnresolved] = useState<Mission[]>([]);
 
   useEffect(() => {
     setDate(todayKey());
@@ -48,6 +51,7 @@ export default function TodayDashboard() {
     setStruggles(savedNotes.struggles ?? "");
     setNotes(savedNotes.notes ?? "");
     setPreferredName(getSettings().preferredName ?? "");
+    setPastUnresolved(getPastUnresolvedMissions(date));
   }, [date]);
 
   const summary = useMemo(() => missionSummary(missions), [missions]);
@@ -72,6 +76,49 @@ export default function TodayDashboard() {
     );
     setMissions(updated);
     saveMissions(date, updated);
+  }
+
+  function carryForwardMission(mission: Mission) {
+    if (!date) return;
+
+    const alreadyCarried = missions.some(
+      (todayMission) =>
+        todayMission.title === mission.title &&
+        todayMission.category === mission.category &&
+        todayMission.date === date
+    );
+
+    if (alreadyCarried) {
+      setPastUnresolved((current) =>
+        current.filter((item) => item.id !== mission.id)
+      );
+      return;
+    }
+
+    const carriedMission: Mission = {
+      ...mission,
+      id: crypto.randomUUID(),
+      date,
+      status: "Todo",
+      createdAt: new Date().toISOString(),
+      completedAt: undefined,
+      reason: mission.reason
+        ? `${mission.reason} Carried forward from ${formatDisplayDate(mission.date)}.`
+        : `Carried forward from ${formatDisplayDate(mission.date)}.`,
+    };
+    const updated = [...missions, carriedMission];
+    setMissions(updated);
+    saveMissions(date, updated);
+    setPastUnresolved((current) =>
+      current.filter((item) => item.id !== mission.id)
+    );
+  }
+
+  function archivePastMissionAsSkipped(mission: Mission) {
+    updateStoredMissionStatus(mission.date, mission.id, "Skipped");
+    setPastUnresolved((current) =>
+      current.filter((item) => item.id !== mission.id)
+    );
   }
 
   function saveNotes(next: { wins?: string; struggles?: string; notes?: string }) {
@@ -152,6 +199,14 @@ export default function TodayDashboard() {
         </Panel>
       </div>
 
+      {pastUnresolved.length > 0 && (
+        <PastUnresolvedPanel
+          missions={pastUnresolved}
+          onCarryForward={carryForwardMission}
+          onArchiveAsSkipped={archivePastMissionAsSkipped}
+        />
+      )}
+
       {missions.length === 0 ? (
         <Panel className="text-center">
           <h3 className="text-xl font-semibold">No missions imported yet.</h3>
@@ -222,6 +277,67 @@ export default function TodayDashboard() {
         </Panel>
       )}
     </div>
+  );
+}
+
+function PastUnresolvedPanel({
+  missions,
+  onCarryForward,
+  onArchiveAsSkipped,
+}: {
+  missions: Mission[];
+  onCarryForward: (mission: Mission) => void;
+  onArchiveAsSkipped: (mission: Mission) => void;
+}) {
+  return (
+    <Panel className="mb-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="micro-label text-[11px] font-medium">Past unresolved</p>
+          <h3 className="mt-2 text-xl font-semibold">Yesterday stays archived. Choose what still matters.</h3>
+        </div>
+        <p className="max-w-xl text-sm leading-6 text-white/55">
+          Old Todo missions count as missed. Skipped missions stay archived and are not carried forward automatically.
+        </p>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {missions.map((mission) => (
+          <div
+            key={mission.id}
+            className="rounded-sm border border-white/12 bg-white/[0.035] p-4"
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-sm border border-white/15 bg-black/20 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/58">
+                    {formatDisplayDate(mission.date)}
+                  </span>
+                  <span className="rounded-sm border border-white/15 bg-white/[0.05] px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/68">
+                    {mission.status}
+                  </span>
+                  <span className="rounded-sm border border-white/15 bg-white/[0.05] px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/68">
+                    {mission.priority}
+                  </span>
+                </div>
+                <h4 className="mt-3 font-semibold">{mission.title}</h4>
+                {mission.reason && (
+                  <p className="mt-1 text-sm leading-6 text-white/52">{mission.reason}</p>
+                )}
+              </div>
+              <div className="grid shrink-0 grid-cols-2 gap-2">
+                <Button type="button" variant="secondary" onClick={() => onCarryForward(mission)}>
+                  Carry Forward
+                </Button>
+                <Button type="button" variant="quiet" onClick={() => onArchiveAsSkipped(mission)}>
+                  Skip Archive
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }
 
